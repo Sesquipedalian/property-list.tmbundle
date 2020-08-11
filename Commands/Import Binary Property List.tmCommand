@@ -6,13 +6,32 @@
 	<string>nop</string>
 	<key>command</key>
 	<string>#!/bin/bash
-echo '// !!! BINARY PROPERTY LIST WARNING !!!'
-echo '//'
-echo '// The pretty-printed property list below has been created'
-echo '// from a binary version on disk and should not be saved as'
-echo '// the ASCII format is a subset of the binary representation!'
-echo '//'
-"${TM_BUNDLE_SUPPORT}/bin/pretty_plist"
+if plist_xml="$(/usr/bin/plutil -convert xml1 -o - -- -)"
+then
+	read -r -d '' warning &lt;&lt;EOF
+&lt;!--
+	!!! BINARY PROPERTY LIST WARNING !!!
+
+	This XML property list has been created from a binary
+	version on disk. If saved, it will overwrite the binary
+	version with the XML version. This should not normally
+	cause any problems, except for a larger file size. If the
+	file needs to be in binary format, convert it to binary
+	after saving using /usr/bin/plutil
+--&gt;
+EOF
+	/usr/bin/perl -pe 's#(&lt;plist version=\x{22}1.0\x{22}&gt;)#'"$warning"'\n$1#' &lt;&lt;&lt; "$plist_xml"
+
+# If conversion to XML failed, fall back to pretty_plist.
+else
+	echo '// !!! BINARY PROPERTY LIST WARNING !!!'
+	echo '//'
+	echo '// The pretty-printed property list below has been created'
+	echo '// from a binary version on disk and should not be saved as'
+	echo '// the ASCII format is a subset of the binary representation!'
+	echo '//'
+	"${TM_BUNDLE_SUPPORT}/bin/pretty_plist"
+fi
 </string>
 	<key>contentMatch</key>
 	<string>\Abplist00</string>
